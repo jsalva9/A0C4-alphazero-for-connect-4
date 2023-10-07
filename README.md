@@ -1,1 +1,1 @@
-# applied_DL
+# Applied Deep Learning - Joan Salvà Soler
