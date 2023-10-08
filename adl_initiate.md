@@ -31,7 +31,7 @@ for this project, since we can compare the performance of our AlphaZero implemen
 
 ### Project overview
 The goal of the project is to implement the AlphaZero algorithm for the game of Connect 4 in a 6x7 board. DeepMind 
-presented the AlphaZero algorithm in [Silver et. al. (2018)](https://arxiv.org/pdf/1712.01815.pdf), and is based on
+presented the AlphaZero algorithm in [Silver et. al. (2018)](https://arxiv.org/abs/1712.01815), and is based on
 the previous work of AlphaGo Zero and AlphaGo. This previous paper will be the main reference for the project.
 DeepMind never released the code for AlphaZero, but many implementations from the community have been published. 
 Some references are [Tian et. al. (2022)](https://arxiv.org/abs/1902.04522) or [McGrath et. al. (2021)](https://arxiv.org/abs/2111.09259).
