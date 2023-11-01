@@ -1,8 +1,11 @@
 import numpy as np
 
+from src.utils import Game
 
-class ConnectGame:
+
+class ConnectGameClassicBoard(Game):
     def __init__(self):
+        super().__init__()
         self.size = (6, 7)
         self.in_a_row = 4
         self.board = None
@@ -18,9 +21,13 @@ class ConnectGame:
 
     def step(self, action) -> bool:
         assert self.winner is None, "Game has already ended."
-        assert self.board[action[0], action[1]] == 0, "Invalid action. The cell is already occupied."
+        assert self.board[0, action] == 0, "Invalid action. The column is full."
 
-        self.board[action[0], action[1]] = self.turn
+        # Look for the first non-empty row in the column action
+        for i in range(self.size[0] - 1, -1, -1):
+            if self.board[i, action] == 0:
+                self.board[i, action] = self.turn
+                break
 
         self.winner = self.check_winner()
         self.turn *= -1     # switch turn
@@ -29,6 +36,8 @@ class ConnectGame:
         return self.winner is not None
 
     def check_winner(self):
+        if np.sum(self.board == 1) < self.in_a_row and np.sum(self.board == -1) < self.in_a_row:
+            return None
         # Check horizontal
         for i in range(self.size[0]):
             for j in range(self.size[1] - self.in_a_row + 1):
@@ -56,37 +65,35 @@ class ConnectGame:
         return None
 
     def get_valid_actions(self):
-        # If column is not full, return last empty row
-        valid_actions = []
-        for j in range(self.size[1]):
-            if self.board[0, j] != 0:
-                continue
-            for i in range(self.size[0] - 1, -1, -1):
-                if self.board[i, j] == 0:
-                    valid_actions.append((i, j))
-                    break
+        # An action is simply the column index
+        valid_actions = [j for j in range(self.size[1]) if self.board[0, j] == 0]
 
         return valid_actions
 
-    def print_board(self):
-        # Print in an elegant manner using unicode characters
-        print("  " + " ".join([str(i) for i in range(self.size[1])]))
+    def __repr__(self):
+        # return string in elegant manner using unicode characters
+        ans = "  " + " ".join([str(i) for i in range(self.size[1])]) + "\n"
         for i in range(self.size[0]):
-            print(i, end=" ")
+            ans += str(i) + " "
             for j in range(self.size[1]):
                 if self.board[i, j] == 1:
-                    print("\u25CF", end=" ")
+                    ans += "x "
                 elif self.board[i, j] == -1:
-                    print("\u25CB", end=" ")
+                    ans += "o "
                 else:
-                    print("\u25A1", end=" ")
-            print()
+                    ans += ". "
+            ans += "\n"
+        return ans
 
 
-if __name__ == '__main__':
-    game = ConnectGame()
-    while game.winner is None:
-        game.print_board()
-        print("Turn: {}".format(game.turn))
-        action = tuple(map(int, input("Enter action: ").split()))
-        game.step(action)
+if __name__ == "__main__":
+    from src.boards.bitboard import ConnectGameBitboard
+    # board = ConnectGameClassicBoard()
+    board = ConnectGameBitboard()
+    print(board)
+
+    while board.check_winner() is None:
+        action = int(input("Enter action: "))
+        board.step(action)
+        print(board)
+    print(board.check_winner())
