@@ -82,3 +82,31 @@ class Agent:
             return 1
 
         return (x + 22) / (max(evaluations) + 22)
+
+
+NNConf = {
+    'num_iterations': 4,
+    'num_games': 30,
+    'num_mcts_sims': 30,
+    'c_puct': 1,
+    'l2_val': 0.0001,
+    'momentum': 0.9,
+    'learning_rate': 0.01,
+    't_policy_val': 0.0001,
+    'temp_init': 1,
+    'temp_final': 0.001,
+    'temp_thresh': 10,
+    'epochs': 10,
+    'batch_size': 128,
+    'dirichlet_alpha': 0.5,
+    'epsilon': 0.25,
+    'model_directory': "./models/",
+    'num_eval_games': 12,
+    'eval_win_rate': 0.55,
+    'load_model': 1,
+    'human_play': 0,
+    'resnet_blocks': 5,
+    'record_loss': 1,
+    'loss_file': "loss.txt",
+    'game': 2
+}

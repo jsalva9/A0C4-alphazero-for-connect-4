@@ -15,6 +15,7 @@ class TestEnvironment:
         self.n_draws = 0
 
         self.bitboard = bitboard
+        self.calculate_accuracy = calculate_accuracy
 
     def initialize_board(self):
         if self.bitboard:
@@ -49,10 +50,12 @@ class TestEnvironment:
             while not is_over:
                 if turn % 2 == x:
                     action = self.agent_1.get_action(game)
-                    move_acc_1.append(self.agent_1.get_action_accuracy(game, action))
+                    if self.calculate_accuracy:
+                        move_acc_1.append(self.agent_1.get_action_accuracy(game, action))
                 else:
                     action = self.agent_2.get_action(game)
-                    move_acc_2.append(self.agent_2.get_action_accuracy(game, action))
+                    if self.calculate_accuracy:
+                        move_acc_2.append(self.agent_2.get_action_accuracy(game, action))
                 is_over = game.step(action)
                 turn += 1
 
@@ -74,7 +77,7 @@ if __name__ == "__main__":
 
     agent_1 = RandomAgent()
     agent_2 = RandomAgent()
-    testing = TestEnvironment(agent_1, agent_2, n_games=50, bitboard=True)
+    testing = TestEnvironment(agent_1, agent_2, n_games=50, bitboard=True, calculate_accuracy=False)
     testing.run()
 
     profiler.stop()

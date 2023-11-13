@@ -1,3 +1,5 @@
+import numpy as np
+
 from src.utils import Game
 
 
@@ -7,6 +9,8 @@ class ConnectGameBitboard(Game):
         self.w = width
         self.h = height
 
+        self._players_map = {0: 1, 1: -1}
+
         self.board_state = None
         self.col_heights = None
         self.moves = None
@@ -14,6 +18,8 @@ class ConnectGameBitboard(Game):
         self.node_count = None
         self.bit_shifts = None
         self.base_search_order = None
+
+        self.state_representation = np.zeros((self.w, self.h), dtype=np.int8)
 
         self.reset()
 
@@ -73,17 +79,14 @@ class ConnectGameBitboard(Game):
         move = 1 << self.col_heights[col]
         assert self.can_play(col), f'Column {col} is full'
         self.col_heights[col] += 1
+        self.state_representation[col][self.col_heights[col] - (self.h + 1) * col - 1] = self._players_map[player]
         self.board_state[player] |= move
         self.history.append(col)
         self.moves += 1
 
-    def backtrack(self):
-        opp = self.get_opponent()
-        col = self.history.pop()
-        self.col_heights[col] -= 1
-        move = 1 << (self.col_heights[col])
-        self.board_state[opp] ^= move
-        self.moves -= 1
+    def get_state_representation(self):
+        # Return a np.array of shape (h, w)
+        return self.state_representation
 
     def winning_board_state(self):
         """ returns true if last played column creates winning alignment """
@@ -134,21 +137,22 @@ class ConnectGameBitboard(Game):
         return [c for c in range(self.w) if self.can_play(c)]
 
     def check_winner(self):
-        players_map = {0: 1, 1: -1}
         if self.winning_board_state():
             if self.moves == self.w * self.h:
                 return 0
-            return players_map[self.get_opponent()]
+            return self._players_map[self.get_opponent()]
         return None
 
 
 if __name__ == '__main__':
     game = ConnectGameBitboard()
 
-    while game.check_winner() is None:
+    is_over = False
+    while not is_over:
         print(game)
-        action = int(input("Enter action: "))
-        game.step(action)
+        import random
+        action = random.choice(game.get_valid_actions())
+        is_over = game.step(action)
 
     print(game)
     print(game.check_winner())
