@@ -1,5 +1,7 @@
+from pyinstrument import Profiler
+
 from src.alpha_zero.neural_net import NNWrapper
-from src.utils import NNConf
+from src.utils import Config
 from src.alpha_zero.mcts import MonteCarloTreeSearch, TreeNode
 from src.alpha_zero.eval import Evaluate
 from src.boards.bitboard import ConnectGameBitboard as Game
@@ -7,21 +9,23 @@ from src.boards.bitboard import ConnectGameBitboard as Game
 import numpy as np
 from copy import deepcopy
 
+configuration = Config()
+
 
 class Train:
-    def __init__(self, game, net):
+    def __init__(self, game: Game, net):
         self.game = game
         self.net = net
         self.eval_net = NNWrapper(game)
 
     def start(self):
         """Main training loop."""
-        for i in range(NNConf['num_iterations']):
+        for i in range(configuration.num_iterations):
             print("Iteration", i + 1)
 
             training_data = []  # list to store self play states, pis and vs
 
-            for j in range(NNConf['num_games']):
+            for j in range(configuration.num_games):
                 print("Start Training Self-Play Game", j + 1)
                 game = self.game.clone()  # Create a fresh clone for each game.
                 self.play_game(game, training_data)
@@ -39,8 +43,7 @@ class Train:
             current_mcts = MonteCarloTreeSearch(self.net)
             eval_mcts = MonteCarloTreeSearch(self.eval_net)
 
-            evaluator = Evaluate(current_mcts=current_mcts, eval_mcts=eval_mcts,
-                                 game=self.game)
+            evaluator = Evaluate(current_mcts=current_mcts, eval_mcts=eval_mcts)
             wins, losses = evaluator.evaluate()
 
             print("wins:", wins)
@@ -55,7 +58,7 @@ class Train:
 
             print("win rate:", win_rate)
 
-            if win_rate > NNConf['eval_win_rate']:
+            if win_rate > configuration.eval_win_rate:
                 # Save current model as the best model.
                 print("New model saved as best model.")
                 self.net.save_model("best_model")
@@ -86,15 +89,13 @@ class Train:
         # Keep playing until the game is in a terminal state.
         while not game_over:
             # MCTS simulations to get the best child node.
-            if turn < NNConf['temp_thresh']:
-                best_child = mcts.search(game, node, NNConf['temp_init'])
+            if turn < configuration.temp_thresh:
+                best_child = mcts.search(game, node, configuration.temp_init)
             else:
-                best_child = mcts.search(game, node, NNConf['temp_final'])
+                best_child = mcts.search(game, node, configuration.temp_final)
 
             # Store state, prob and v for training.
-            self_play_data.append([deepcopy(game.get_state_representation()),
-                                   deepcopy(best_child.parent.child_psas),
-                                   0])
+            self_play_data.append([game.get_state_representation().copy(), best_child.parent.child_psas, 0])
 
             action = best_child.action
             game_over = game.step(action)  # Play the child node's action.
@@ -107,25 +108,25 @@ class Train:
 
         # Update v as the value of the game result.
         for game_state in self_play_data:
-            value = -value
-            game_state[2] = value
-            self.augment_data(game_state, training_data, game.w, game.h)
+            game_state[2] = -value
+            training_data.append(game_state)
+            # TODO: Augment data by flipping the board state horizontally.
 
-    def augment_data(self, game_state, training_data, row, column):
-        """Loop for each self-play game.
+        # Print statistics of the MCTS
+        mcts.print_stats()
 
-        Runs MCTS for each game state and plays a move based on the MCTS output.
-        Stops when the game is over and prints out a winner.
 
-        Args:
-            game_state: An object containing the state, pis and value.
-            training_data: A list to store self play states, pis and vs.
-            row: An integer indicating the length of the board row.
-            column: An integer indicating the length of the board column.
-        """
-        state = deepcopy(game_state[0])
-        psa_vector = deepcopy(game_state[1])
 
-        training_data.append([state, psa_vector, game_state[2]])
 
-        # TODO: Augment data by flipping the board state horizontally.
+
+if __name__ == '__main__':
+    profiler = Profiler()
+    profiler.start()
+
+    game = Game()
+    net = NNWrapper(game)
+    train = Train(game, net)
+    train.start()
+
+    profiler.stop()
+    print(profiler.output_text(unicode=True, color=True))

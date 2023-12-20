@@ -1,3 +1,5 @@
+from copy import deepcopy as copy
+
 import numpy as np
 
 from src.utils import Game
@@ -85,8 +87,10 @@ class ConnectGameBitboard(Game):
         self.moves += 1
 
     def get_state_representation(self):
-        # Return a np.array of shape (h, w)
-        return self.state_representation
+        # Return a np.array of shape (h, w) with the canonical board state
+        # The canonical board state is the board state from the perspective of the current player
+
+        return self.state_representation * self._players_map[self.get_current_player()]
 
     def winning_board_state(self):
         """ returns true if last played column creates winning alignment """
@@ -142,6 +146,9 @@ class ConnectGameBitboard(Game):
                 return 0
             return self._players_map[self.get_opponent()]
         return None
+
+    def clone(self):
+        return copy(self)
 
 
 if __name__ == '__main__':

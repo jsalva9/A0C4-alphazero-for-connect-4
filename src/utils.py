@@ -4,6 +4,8 @@ import requests
 import os
 import shelve
 
+import yaml
+
 
 class Game(ABC):
     """
@@ -84,29 +86,24 @@ class Agent:
         return (x + 22) / (max(evaluations) + 22)
 
 
-NNConf = {
-    'num_iterations': 4,
-    'num_games': 30,
-    'num_mcts_sims': 30,
-    'c_puct': 1,
-    'l2_val': 0.0001,
-    'momentum': 0.9,
-    'learning_rate': 0.01,
-    't_policy_val': 0.0001,
-    'temp_init': 1,
-    'temp_final': 0.001,
-    'temp_thresh': 10,
-    'epochs': 10,
-    'batch_size': 128,
-    'dirichlet_alpha': 0.5,
-    'epsilon': 0.25,
-    'model_directory': "./models/",
-    'num_eval_games': 12,
-    'eval_win_rate': 0.55,
-    'load_model': 1,
-    'human_play': 0,
-    'resnet_blocks': 5,
-    'record_loss': 1,
-    'loss_file': "loss.txt",
-    'game': 2
-}
+class Config:
+    def __init__(self):
+        # Read config from config.yaml.
+        self.__root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self._config_path = os.path.join(self.__root, 'config.yaml')
+
+        with open(self._config_path, 'r') as f:
+            self._config = yaml.safe_load(f)
+
+        self.model_dir_path = os.path.join(self.__root, self._config['model_directory'])
+
+    def __getattr__(self, item):
+        # if the item is already an attribute of self, return it
+        if item in self.__dict__:
+            return self.__dict__[item]
+
+        # if the item exists as a key in self._config, return it
+        try:
+            return self._config[item]
+        except KeyError:
+            raise AttributeError(f"'Config' object has no attribute '{item}'")

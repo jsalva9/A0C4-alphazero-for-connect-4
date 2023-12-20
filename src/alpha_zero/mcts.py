@@ -2,8 +2,10 @@ import math
 
 import numpy as np
 
-from src.utils import NNConf
+from src.utils import Config
 from copy import deepcopy
+
+configuration = Config()
 
 
 class TreeNode(object):
@@ -14,7 +16,7 @@ class TreeNode(object):
         Wsa: A float for the total action value.
         Qsa: A float for the mean action value.
         Psa: A float for the prior probability of reaching this node.
-        action: A tuple(row, column) of the prior move of reaching this node.
+        action: Column index of the prior move of reaching this node.
         children: A list which stores child nodes.
         child_psas: A vector containing child probabilities.
         parent: A TreeNode representing the parent node.
@@ -47,20 +49,7 @@ class TreeNode(object):
         Returns:
             A child TreeNode which is the most promising according to PUCT.
         """
-        c_puct = NNConf['c_puct']
-
-        highest_uct = 0
-        highest_index = 0
-
-        # Select the child with the highest Q + U value
-        for idx, child in enumerate(self.children):
-            uct = child.Qsa + child.Psa * c_puct * (
-                    math.sqrt(self.Nsa) / (1 + child.Nsa))
-            if uct > highest_uct:
-                highest_uct = uct
-                highest_index = idx
-
-        return self.children[highest_index]
+        return max(self.children, key=lambda c: c.Qsa * c.Psa * configuration.c_puct * (math.sqrt(self.Nsa) / (1 + c.Nsa)))
 
     def expand_node(self, game, psa_vector):
         """Expands the current node by adding valid moves as children.
@@ -69,29 +58,11 @@ class TreeNode(object):
             game: An object containing the game state.
             psa_vector: A list containing move probabilities for each move.
         """
-        self.child_psas = deepcopy(psa_vector)
-        valid_moves = game.get_valid_moves(game.current_player)
+        self.child_psas = psa_vector.copy()
+        valid_moves = game.get_valid_actions()
         for idx, move in enumerate(valid_moves):
-            if move[0] is not 0:
-                action = deepcopy(move)
-                self.add_child_node(parent=self, action=action,
-                                    psa=psa_vector[idx])
-
-    def add_child_node(self, parent, action, psa=0.0):
-        """Creates and adds a child TreeNode to the current node.
-
-        Args:
-            parent: A TreeNode which is the parent of this node.
-            action: A tuple(row, column) of the prior move to reach this node.
-            psa: A float representing the raw move probability for this node.
-
-        Returns:
-            The newly created child TreeNode.
-        """
-
-        child_node = TreeNode(parent=parent, action=action, psa=psa)
-        self.children.append(child_node)
-        return child_node
+            child_node = TreeNode(parent=self, action=move, psa=psa_vector[idx])
+            self.children.append(child_node)
 
     def back_prop(self, wsa, v):
         """Update the current node's statistics based on the game outcome.
@@ -134,37 +105,34 @@ class MonteCarloTreeSearch(object):
         self.root = node
         self.game = game
 
-        for i in range(NNConf['num_mcts_sims']):
+        for i in range(configuration.num_mcts_sims):
             node = self.root
             game = self.game.clone()  # Create a fresh clone for each loop.
 
             # Loop when node is not a leaf
             while node.is_not_leaf():
                 node = node.select_child()
-                game.play_action(node.action)
+                game.step(node.action)
 
             # Get move probabilities and values from the network for this state.
-            psa_vector, v = self.net.predict(game.state)
+            psa_vector, v = self.net.predict(game.get_state_representation())
 
             # Add Dirichlet noise to the psa_vector of the root node.
             if node.parent is None:
                 psa_vector = self.add_dirichlet_noise(game, psa_vector)
 
-            valid_moves = game.get_valid_moves(game.current_player)
-            for idx, move in enumerate(valid_moves):
-                if move[0] is 0:
-                    psa_vector[idx] = 0
-
             psa_vector_sum = sum(psa_vector)
 
-            # Renormalize psa vector
+            # Normalize psa vector
             if psa_vector_sum > 0:
                 psa_vector /= psa_vector_sum
 
             # Try expanding the current node.
             node.expand_node(game=game, psa_vector=psa_vector)
 
-            game_over, wsa = game.check_game_over(game.current_player)
+            wsa = game.check_winner()
+            if wsa is None:
+                wsa = 0
 
             # Back propagate node statistics up to the root node.
             while node is not None:
@@ -198,13 +166,42 @@ class MonteCarloTreeSearch(object):
         Returns:
             A probability vector which has Dirichlet noise added to it.
         """
-        dirichlet_input = [NNConf['dirichlet_alpha'] for x in range(game.action_size)]
+        dirichlet_input = [configuration.dirichlet_alpha for x in range(game.w)]
 
         dirichlet_list = np.random.dirichlet(dirichlet_input)
         noisy_psa_vector = []
 
         for idx, psa in enumerate(psa_vector):
             noisy_psa_vector.append(
-                (1 - NNConf['epsilon']) * psa + NNConf['epsilon'] * dirichlet_list[idx])
+                (1 - configuration.epsilon) * psa + configuration.epsilon * dirichlet_list[idx])
 
         return noisy_psa_vector
+
+    def print_stats(self):
+        print("MCTS Stats:")
+        # Count total states explored (nodes in the tree)
+        count = 0
+        for node in self.root.children:
+            count += self.count_children(node)
+        print("Total states explored:", count)
+
+        # Count levels of the tree
+        levels = 0
+        for node in self.root.children:
+            levels = max(levels, self.count_levels(node))
+        print("Levels of the tree:", levels)
+
+    def count_children(self, node):
+        count = 1
+        for child in node.children:
+            count += self.count_children(child)
+        return count
+
+    def count_levels(self, node):
+        if node.is_not_leaf():
+            count = 0
+            for child in node.children:
+                count = max(count, self.count_levels(child))
+            return count + 1
+        else:
+            return 0

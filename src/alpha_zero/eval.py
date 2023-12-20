@@ -1,6 +1,9 @@
-from src.utils import NNConf
+from src.utils import Config
 from mcts import TreeNode
 from src.boards.bitboard import ConnectGameBitboard as Game
+
+
+configuration = Config()
 
 
 class Evaluate(object):
@@ -27,7 +30,7 @@ class Evaluate(object):
         losses = 0
 
         # Self-play loop
-        for i in range(NNConf['']):
+        for i in range(configuration.num_eval_games):
             print("Start Evaluation Self-Play Game:", i, "\n")
 
             game = Game()  # Create a fresh clone for each game.
@@ -35,17 +38,15 @@ class Evaluate(object):
             value = 0
             node = TreeNode()
 
-            player = game.get_current_player()
-
             # Keep playing until the game is in a terminal state.
             while not game_over:
                 # MCTS simulations to get the best child node.
                 # If player_to_eval is 1 play using the current network
                 # Else play using the evaluation network.
                 if game.get_current_player() == 1:
-                    best_child = self.current_mcts.search(game, node, NNConf[''])
+                    best_child = self.current_mcts.search(game, node, configuration.temp_final)
                 else:
-                    best_child = self.eval_mcts.search(game, node, NNConf[''])
+                    best_child = self.eval_mcts.search(game, node, configuration.temp_final)
 
                 action = best_child.action
                 game_over = game.step(action)  # Play the child node's action.
