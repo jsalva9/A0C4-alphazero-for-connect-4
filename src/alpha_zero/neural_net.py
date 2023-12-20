@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import numpy as np
 from src.boards.bitboard import ConnectGameBitboard as Game
 from src.utils import Config
 
@@ -10,6 +9,10 @@ configuration = Config()
 
 
 class ResidualBlock(nn.Module):
+    """
+    Residual block used in the neural network. Multiple copies of this block are stacked together to
+    form the ResNet.
+    """
     def __init__(self, in_channels, out_channels):
         super(ResidualBlock, self).__init__()
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, stride=1)
@@ -19,6 +22,15 @@ class ResidualBlock(nn.Module):
         self.bn2 = nn.BatchNorm2d(out_channels)
 
     def forward(self, x):
+        """
+        Forward pass of the residual block.
+
+        Args:
+            x: Input tensor.
+
+        Returns:
+            Output tensor.
+        """
         residual = x
 
         out = self.conv1(x)
@@ -35,6 +47,11 @@ class ResidualBlock(nn.Module):
 
 
 class NeuralNetwork(nn.Module):
+    """
+    Neural network used for the AlphaZero algorithm. The network consists of a convolutional layer, multiple
+    residual blocks and two heads. The policy head outputs a vector of probabilities for each action. The value
+    head outputs a single value which is the value of the current state.
+    """
     def __init__(self, game: Game):
         super(NeuralNetwork, self).__init__()
         self.row = game.h
@@ -67,6 +84,16 @@ class NeuralNetwork(nn.Module):
         )
 
     def forward(self, x):
+        """
+        Forward pass of the neural network.
+
+        Args:
+            x: Input tensor.
+
+        Returns:
+            pi: A tensor containing the policy probabilities.
+            v: A tensor containing the value of the current state.
+        """
         x = x.view(-1, 1, self.row, self.column)  # Reshape input
         x = self.conv1(x)
         x = self.bn1(x)
@@ -86,19 +113,35 @@ class NeuralNetwork(nn.Module):
         v = self.conv5(resnet_out)
         v = self.bn5(v)
         v = self.relu5(v)
-        # v = v.view(-1, self.action_size)
         v = self.fc_v(v)
 
         return pi, v
 
 
 class NNWrapper:
+    """
+    Wrapper for the neural network. This class is used to train the network and to make predictions.
+
+    Attributes:
+        game: An object containing the game state.
+        net: a NeuralNetwork object containing the neural network to wrap
+        optimizer: An optimizer object used to train the network.
+    """
     def __init__(self, game):
         self.game = game
         self.net = NeuralNetwork(self.game)
         self.optimizer = optim.SGD(self.net.parameters(), lr=configuration.learning_rate, momentum=configuration.momentum)
 
     def predict(self, state):
+        """
+        Predict the policy probabilities and value of the current state.
+        Args:
+            state: A numpy array containing the state canonical representation.
+
+        Returns:
+            pi: A numpy array containing the policy probabilities.
+            v: A float representing the value of the current state.
+        """
         state = torch.FloatTensor(state).unsqueeze(0)
 
         pi, v = self.net(state)
@@ -107,6 +150,12 @@ class NNWrapper:
         return pi, v
 
     def train(self, training_data):
+        """
+        Train the neural network using the training data.
+
+        Args:
+            training_data: A list containing the self play states, pis and vs.
+        """
         print("\nTraining the network.\n")
 
         for epoch in range(configuration.epochs):
@@ -141,11 +190,23 @@ class NNWrapper:
         print("\n")
 
     def save_model(self, filename="current_model"):
+        """
+        Save the neural network model in self.net.
+
+        Args:
+            filename: A string representing the name of the file to save the model to.
+        """
         file_path = f'{configuration.model_dir_path}/{filename}.pt'
         print("Saving model:", filename, "at", configuration.model_dir_path)
         torch.save(self.net.state_dict(), file_path)
 
     def load_model(self, filename="current_model"):
+        """
+        Load the neural network model to self.net.
+
+        Args:
+            filename: A string representing the name of the file to load the model from.
+        """
         file_path = f'{configuration.model_dir_path}/{filename}.pt'
         print("Loading model:", filename, "from", configuration.model_dir_path)
         self.net.load_state_dict(torch.load(file_path))

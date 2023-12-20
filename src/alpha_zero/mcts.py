@@ -1,15 +1,15 @@
-import math
-
+from math import sqrt
 import numpy as np
-
 from src.utils import Config
-from copy import deepcopy
+
+
 
 configuration = Config()
 
 
 class TreeNode(object):
-    """Represents a board state and stores statistics for actions at that state.
+    """
+    Represents a board state and stores statistics for actions at that state.
 
     Attributes:
         Nsa: An integer for visit count.
@@ -34,7 +34,8 @@ class TreeNode(object):
         self.parent = parent
 
     def is_not_leaf(self):
-        """Checks if a TreeNode is a leaf.
+        """
+        Checks if a TreeNode is a leaf (has no children).
 
         Returns:
             A boolean value indicating if a TreeNode is a leaf.
@@ -44,15 +45,17 @@ class TreeNode(object):
         return False
 
     def select_child(self):
-        """Selects a child node based on the AlphaZero PUCT formula.
+        """
+        Selects a child node based on the AlphaZero PUCT formula.
 
         Returns:
             A child TreeNode which is the most promising according to PUCT.
         """
-        return max(self.children, key=lambda c: c.Qsa * c.Psa * configuration.c_puct * (math.sqrt(self.Nsa) / (1 + c.Nsa)))
+        return max(self.children, key=lambda c: c.Qsa * c.Psa * configuration.c_puct * (sqrt(self.Nsa) / (1 + c.Nsa)))
 
     def expand_node(self, game, psa_vector):
-        """Expands the current node by adding valid moves as children.
+        """
+        Expands the current node by adding valid moves as children.
 
         Args:
             game: An object containing the game state.
@@ -65,7 +68,8 @@ class TreeNode(object):
             self.children.append(child_node)
 
     def back_prop(self, wsa, v):
-        """Update the current node's statistics based on the game outcome.
+        """
+        Update the current node's statistics based on the game outcome.
 
         Args:
             wsa: A float representing the action value for this state.
@@ -86,13 +90,16 @@ class MonteCarloTreeSearch(object):
     """
 
     def __init__(self, net):
-        """Initializes TreeNode with the TreeNode, board and neural network."""
+        """
+        Initializes TreeNode with the TreeNode, board and neural network.
+        """
         self.root = None
         self.game = None
         self.net = net
 
     def search(self, game, node, temperature) -> TreeNode:
-        """MCTS loop to get the best move which can be played at a given state.
+        """
+        MCTS loop to get the best move which can be played at a given state.
 
         Args:
             game: An object containing the game state.
@@ -154,7 +161,8 @@ class MonteCarloTreeSearch(object):
 
         return self.root.children[highest_index]
 
-    def add_dirichlet_noise(self, game, psa_vector):
+    @staticmethod
+    def add_dirichlet_noise(game, psa_vector):
         """Add Dirichlet noise to the psa_vector of the root node.
 
         This is for additional exploration.

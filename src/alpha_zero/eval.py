@@ -7,12 +7,11 @@ configuration = Config()
 
 
 class Evaluate(object):
-    """Represents the Policy and Value Resnet.
+    """Evaluate the current network against the evaluation network
 
     Attributes:
         current_mcts: An object for the current network's MCTS.
         eval_mcts: An object for the evaluation network's MCTS.
-        game: An object containing the game state.
     """
 
     def __init__(self, current_mcts, eval_mcts):
@@ -21,7 +20,9 @@ class Evaluate(object):
         self.eval_mcts = eval_mcts
 
     def evaluate(self):
-        """Play self-play games between the two networks and record game stats.
+        """
+        Play self-play games between the two networks and record game stats.
+
 
         Returns:
             Wins and losses count from the perspective of the current network.

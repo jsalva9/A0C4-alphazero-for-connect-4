@@ -6,6 +6,16 @@ import numpy as np
 
 
 class TestEnvironment:
+    """
+    This class tests the performance of two agents against each other.
+
+    Args:
+        agent_1: An object containing the first agent.
+        agent_2: An object containing the second agent.
+        n_games: An integer representing the number of games to play.
+        bitboard: A boolean representing whether to use bitboard or classic board.
+        calculate_accuracy: A boolean representing whether to calculate the accuracy of the agents.
+    """
     def __init__(self, agent_1: Agent, agent_2: Agent, n_games=1000, bitboard=True, calculate_accuracy=False):
         self.agent_1 = agent_1
         self.agent_2 = agent_2
@@ -18,13 +28,21 @@ class TestEnvironment:
         self.calculate_accuracy = calculate_accuracy
 
     def initialize_board(self):
+        """
+        Initialize the board.
+
+        Returns:
+            Game object.
+        """
         if self.bitboard:
             return ConnectGameBitboard()
         else:
             return ConnectGameClassicBoard()
 
     def run(self):
-        # Run half the games with agent 1 starting, half with agent 2 starting
+        """
+        Run the tests. Run half the games with agent 1 starting, half with agent 2 starting
+        """
         wins_1, draws_1, move_acc_1_1, move_acc_2_1 = self.run_batch(self.n_games // 2, agent_1_starts=True)
         wins_2, draws_2, move_acc_1_2, move_acc_2_2 = self.run_batch(self.n_games // 2, agent_1_starts=False)
 
@@ -36,6 +54,16 @@ class TestEnvironment:
         print(f"Draws: {self.n_draws}\n")
 
     def run_batch(self, n_games, agent_1_starts=True):
+        """
+        Run a batch of games.
+
+        Args:
+            n_games: Number of games to play.
+            agent_1_starts: A boolean representing whether agent 1 starts.
+
+        Returns:
+            Number of wins, number of draws, move accuracy of agent 1, move accuracy of agent 2.
+        """
         wins = 0
         draws = 0
         x = 0 if agent_1_starts else 1

@@ -1,3 +1,5 @@
+from random import shuffle
+
 from pyinstrument import Profiler
 
 from src.alpha_zero.neural_net import NNWrapper
@@ -6,20 +8,28 @@ from src.alpha_zero.mcts import MonteCarloTreeSearch, TreeNode
 from src.alpha_zero.eval import Evaluate
 from src.boards.bitboard import ConnectGameBitboard as Game
 
-import numpy as np
-from copy import deepcopy
 
 configuration = Config()
 
 
 class Train:
+    """
+    This class performs the training of the neural network.
+
+    Attributes:
+        game: An object containing the game state.
+        net: An object containing the neural network.
+        eval_net: An object containing the evaluation neural network.
+    """
     def __init__(self, game: Game, net):
         self.game = game
         self.net = net
         self.eval_net = NNWrapper(game)
 
-    def start(self):
-        """Main training loop."""
+    def run(self):
+        """
+        Run the training loop.
+        """
         for i in range(configuration.num_iterations):
             print("Iteration", i + 1)
 
@@ -37,6 +47,7 @@ class Train:
             self.eval_net.load_model()
 
             # Train the network using self play values.
+            shuffle(training_data)
             self.net.train(training_data)
 
             # Initialize MonteCarloTreeSearch objects for both networks.
@@ -46,18 +57,11 @@ class Train:
             evaluator = Evaluate(current_mcts=current_mcts, eval_mcts=eval_mcts)
             wins, losses = evaluator.evaluate()
 
-            print("wins:", wins)
-            print("losses:", losses)
+            print(f'wins: {wins}, draws: {configuration.num_eval_games - wins - losses}, losses: {losses}')
+            win_rate = wins / configuration.num_eval_games
+            print(f'win rate: {win_rate}')
 
-            num_games = wins + losses
-
-            if num_games == 0:
-                win_rate = 0
-            else:
-                win_rate = wins / num_games
-
-            print("win rate:", win_rate)
-
+            # If the win rate is > 50%, we save it as best model. Otherwise, also save it in case we don't have one yet
             if win_rate > configuration.eval_win_rate:
                 # Save current model as the best model.
                 print("New model saved as best model.")
@@ -68,7 +72,8 @@ class Train:
                 self.net.load_model()
 
     def play_game(self, game: Game, training_data):
-        """Loop for each self-play game.
+        """
+        Loop for each self-play game.
 
         Runs MCTS for each game state and plays a move based on the MCTS output.
         Stops when the game is over and prints out a winner.
@@ -110,13 +115,10 @@ class Train:
         for game_state in self_play_data:
             game_state[2] = -value
             training_data.append(game_state)
-            # TODO: Augment data by flipping the board state horizontally.
+            # TODO: Augment data by flipping the board state horizontally?
 
         # Print statistics of the MCTS
         mcts.print_stats()
-
-
-
 
 
 if __name__ == '__main__':
@@ -126,7 +128,7 @@ if __name__ == '__main__':
     game = Game()
     net = NNWrapper(game)
     train = Train(game, net)
-    train.start()
+    train.run()
 
     profiler.stop()
     print(profiler.output_text(unicode=True, color=True))

@@ -58,6 +58,15 @@ class Agent:
         pass
 
     def get_optimal_evaluations(self, game) -> list:
+        """
+        Get optimal evaluations for the given game state.
+
+        Args:
+            game: Game object.
+
+        Returns:
+            List of optimal evaluations for each action.
+        """
         key = "".join([str(s + 1) for s in game.history])
         if key in self._cache:
             return self._cache[key]
@@ -74,6 +83,16 @@ class Agent:
         return scores
 
     def get_action_accuracy(self, game, action) -> float:
+        """
+        Get the accuracy of a given action.
+
+        Args:
+            game: Game object.
+            action: Action to get the accuracy of.
+
+        Returns:
+            Accuracy of the given action.
+        """
         evaluations = self.get_optimal_evaluations(game)
         if evaluations[action] == 100:
             return 0
@@ -87,6 +106,9 @@ class Agent:
 
 
 class Config:
+    """
+    Configuration object for the project.
+    """
     def __init__(self):
         # Read config from config.yaml.
         self.__root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
