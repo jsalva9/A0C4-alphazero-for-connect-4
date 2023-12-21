@@ -79,7 +79,7 @@ will be explored, even considering the downside of not being the optimal policy.
  - **Task 5** (10 hours): Training, hyperparameter tuning, and evaluation. We train the neural networks through self-play, 
 and evaluate the resulting agent. Hyperparameter tuning is done.
  - **Task 6** (15 hours): Streamlit or PyGame application that allows to visualize the state-values and the prior 
-probabilities for a selection of moves.
+probabilities for a selection |of moves.
  - **Task 7** (5 hours): Preparation of the presentation (slides, demo, video recording...). The code will be documented,
 a ReadMe will be created, and the GitHub repository will be made public 
 

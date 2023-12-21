@@ -1,3 +1,4 @@
+from src.agents.alpha_agent import AlphaAgent
 from src.boards.bitboard import ConnectGameBitboard
 from src.boards.classic_board import ConnectGameClassicBoard
 from src.utils import Agent
@@ -103,9 +104,9 @@ if __name__ == "__main__":
     profiler = Profiler()
     profiler.start()
 
-    agent_1 = RandomAgent()
+    agent_1 = AlphaAgent()
     agent_2 = RandomAgent()
-    testing = TestEnvironment(agent_1, agent_2, n_games=50, bitboard=True, calculate_accuracy=False)
+    testing = TestEnvironment(agent_1, agent_2, n_games=20, bitboard=True, calculate_accuracy=True)
     testing.run()
 
     profiler.stop()
