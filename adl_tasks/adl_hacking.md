@@ -47,7 +47,7 @@ runs the games and returns the results.
 One challenge that I have already solved is the implementation of the optimal policy. The way I did it is by using
 this [online connect4 solver](https://connect4.gamesolver.org/). The solver computes the score of each possible move for a 
 given board. The way to pass a board to the solver is by using the sequence of played columns. For example, 
-``0402`` means that the first player played in column 0, the second player in column 4, the first player in column 0 again,
+``0402`` means that the first player played in column 0, the second player in column 4, the first player in column 0 again.
 Finally, a REQUEST on ``https://connect4.gamesolver.org/?pos=0402=`` returns a dictionary with the scores of each move.
 Since it is expensive to make a request for each move, I implemented a cache that stores the results of the requests.
 
@@ -63,11 +63,11 @@ As explained before, we have three implementations of the ``Agent`` class:
 ## AlphaZero architecture
 The specific code for the AlphaZero architecture is in the ``src/alpha_zero`` folder. For some context, let's recall the
 architecture of AlphaZero:
-- A Monte-Carlo Tree Search algorithm that performs the tree search. This means that the algorithm will explore the 
+- A Monte-Carlo Tree Search algorithm performs the tree search. This means that the algorithm will explore the 
   possible moves by simulating games from the current state. The algorithm will then select the move that leads to the 
   best outcome. When a leaf is reached, the whole path is updated with the outcome of the game. This also becomes a 
   training sample for the neural networks.
-- The two neural networks that are used inside the Monte-Carlo Tree Search algorithm:
+- Two neural networks are used inside the Monte-Carlo Tree Search algorithm:
   - The policy network is a neural network that takes as input the current state of the game and outputs a probability 
     distribution over the possible moves. The goal of this network is to learn the optimal policy.
   - The value network is a neural network that takes as input the current state of the game and outputs a value between 
@@ -80,7 +80,7 @@ is updated neural and will guide the search in the next iteration of the MTCS. T
 is visualized in the following diagram:
 ![AlphaZero training](alpha_zero_training.png)
 - Regarding the Neural Network architecture, we went with the same one as in the original paper. In essence, it comprises
-a number of residual blocks, followed by a policy head and a value head. The policy head is a fully connected layer with
+several residual blocks, followed by a policy head and a value head. The policy head is a fully connected layer with
 a softmax activation function. The value head is a fully connected layer with a tanh activation function. The number of
 residual blocks is a hyperparameter that we will tune later. The following diagram shows the architecture, but keep in mind
 that is Chess and not Connect 4:
@@ -118,7 +118,7 @@ The ``Train`` class implements the main training loop:
 
 For a number of iterations:
  - Play a number of games by using the current neural network and the MCTS algorithm.
- - Update MCTS tree with results of the games.
+ - Update MCTS tree with the results of the games.
  - Gather training dataset from the MCTS tree.
  - Train the neural network on the gathered dataset.
  - Evaluate the new neural network against the previous versions of it.
@@ -129,7 +129,7 @@ For a number of iterations:
 The fact that Connect 4 is solved means that we can compare the performance of our agents with the optimal policy.
 We define the following accuracy metric for a move: 
 - Assume _optimal_eval_ is the optimal evaluation of the move, i.e. the score of the move according to the optimal policy.
-Note that this is a number between -22 and 22 because it represents the minimum number of moves to win, if played optimally.
+Note that this is a number between -22 and 22 because it represents the minimum number of moves to win if played optimally.
 - Assume _x_ is the evaluation of the move (_optimal_eval_[_move_]).
 - Then the accuracy of the move is (_x_ + 22) / (max(_evaluations_) + 22)
 - We define the accuracy of an agent in a game as the average of the single move accuracies.
@@ -139,20 +139,20 @@ Note that this is a number between -22 and 22 because it represents the minimum 
 After playing 100 random games against itself (random vs random) and against the optimal policy, 
 we could conclude that the RandomAgent has an average accuracy of **0.81**. It could seem high, but it is not, it just has to do 
 with the scaling of the _evaluation_ vector and the choice of the accuracy metric.
-- We also experiment with this measure for the OptimalAgent, and indeet has an accuracy of **1.0**.
+- We also experiment with this measure for the OptimalAgent and indeed has an accuracy of **1.0**.
 
 What would be the target accuracy for the AlphaZeroAgent? We would naturally expect it to be better than the
-RandomAgent, i.e., > 0.81. But how good to we aim for? We could aim for 1.0, but that is unlikely to happen. However, 
+RandomAgent, i.e., > 0.81. But how good do we aim for? We could aim for 1.0, but that is unlikely to happen. However, 
 I could imagine that if AlphaZero is trained in the same settings as it was done by DeepMind for Chess or Go 
 (that is 5000 TPUs during 3 days), it would be able to learn the optimal policy. However, our hardware limitations will
-make things difficult, and we will have to settle for a lower accuracy. We want set a target number; we simply aim for 
+make things difficult, and we will have to settle for a lower accuracy. We want to set a target number; we simply aim for 
 the highest accuracy possible!
 
 #### Last experiments and project status
 The training loop of AlphaZero is expensive. The main bottleneck is the Neural Network forward pass, which is used in
 the MCTS algorithm for every node expansion and search. Therefore, the training executions that I have done so far have
 been limited to 30 minutes of training. The best accuracy that I have achieved so far is **0.875**. It seems to be 
-significantly better than the baseline accuracy. In a series of 20 games agains the RandomAgent, AlphaZero won 17/20 games. 
+significantly better than the baseline accuracy. In a series of 20 games against the RandomAgent, AlphaZero won 17/20 games. 
 However, it is still far from the optimal policy. More and longer training is needed to achieve better results. Hyperparameter
 tuning could also help to improve the results, and only minor parameters have been tuned so far.
 
