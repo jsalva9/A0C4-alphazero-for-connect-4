@@ -50,11 +50,15 @@ class Agent:
         self._headers = {'User-Agent': 'Mozilla/5.0'}
         self._session = requests.Session()
 
-        self._cache = shelve.open('../cache/cache.db', writeback=True)
-        self._cache_size = os.path.getsize('../cache/cache.db.dat')
+        self._cache = shelve.open('../../cache/cache.db', writeback=True)
+        self._cache_size = os.path.getsize('../../cache/cache.db.dat')
 
     @abstractmethod
     def get_action(self, game: Game):
+        pass
+
+    @abstractmethod
+    def get_priors(self, game: Game):
         pass
 
     def get_optimal_evaluations(self, game) -> list:

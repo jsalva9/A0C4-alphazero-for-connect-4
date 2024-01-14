@@ -17,6 +17,9 @@ class RandomAgent(Agent):
     def get_action(self, game: Game):
         return random.choice(game.get_valid_actions())
 
+    def get_priors(self, game: Game):
+        return [1/len(game.get_valid_actions()) for _ in game.get_valid_actions()]
+
 
 class OptimalAgent(Agent):
     """
@@ -39,3 +42,12 @@ class OptimalAgent(Agent):
         valid_actions = game.get_valid_actions()
         action = max(valid_actions, key=lambda x: evaluations[x] if evaluations[x] != 100 else -100)
         return action
+
+    def get_priors(self, game: ConnectGameBitboard):
+        """
+        Get the optimal evaluations for each action.
+
+        Args:
+            game: An object containing the game state.
+        """
+        return self.get_optimal_evaluations(game)

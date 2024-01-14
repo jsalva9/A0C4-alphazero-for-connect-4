@@ -2,8 +2,6 @@ from math import sqrt
 import numpy as np
 from src.utils import Config
 
-
-
 configuration = Config()
 
 
@@ -51,7 +49,7 @@ class TreeNode(object):
         Returns:
             A child TreeNode which is the most promising according to PUCT.
         """
-        return max(self.children, key=lambda c: c.Qsa * c.Psa * configuration.c_puct * (sqrt(self.Nsa) / (1 + c.Nsa)))
+        return max(self.children, key=lambda c: c.Qsa + c.Psa * configuration.c_puct * (sqrt(self.Nsa) / (1 + c.Nsa)))
 
     def expand_node(self, game, psa_vector):
         """
