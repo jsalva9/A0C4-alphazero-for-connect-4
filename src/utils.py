@@ -50,8 +50,10 @@ class Agent:
         self._headers = {'User-Agent': 'Mozilla/5.0'}
         self._session = requests.Session()
 
-        self._cache = shelve.open('../../cache/cache.db', writeback=True)
-        self._cache_size = os.path.getsize('../../cache/cache.db.dat')
+        root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        cache_dir = os.path.join(root, 'cache')
+        self._cache = shelve.open(f'{cache_dir}/cache.db', writeback=True)
+        self._cache_size = os.path.getsize(f'{cache_dir}/cache.db.dat')
 
     @abstractmethod
     def get_action(self, game: Game):
@@ -73,6 +75,9 @@ class Agent:
         """
         key = "".join([str(s + 1) for s in game.history])
         if key in self._cache:
+            if len(self._cache[key]) != 7:
+                del self._cache[key]
+                return self.get_optimal_evaluations(game)
             return self._cache[key]
 
         url = f'{self._base_url}{key}'
@@ -89,6 +94,7 @@ class Agent:
     def get_action_accuracy(self, game, action) -> float:
         """
         Get the accuracy of a given action.
+        It is simply 1 if the action is optimal, 0 otherwise.
 
         Args:
             game: Game object.
@@ -103,10 +109,7 @@ class Agent:
         x = evaluations[action]
         while 100 in evaluations:
             evaluations.remove(100)
-        if max(evaluations) == min(evaluations):
-            return 1
-
-        return (x + 22) / (max(evaluations) + 22)
+        return 1 if x == max(evaluations) else 0
 
 
 class Config:

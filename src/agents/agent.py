@@ -40,7 +40,8 @@ class OptimalAgent(Agent):
         evaluations = self.get_optimal_evaluations(game)
         # Return the index of the max evaluation, if the value is not 100 (column is full)
         valid_actions = game.get_valid_actions()
-        action = max(valid_actions, key=lambda x: evaluations[x] if evaluations[x] != 100 else -100)
+        random.shuffle(valid_actions)
+        action = max(valid_actions, key=lambda x: evaluations[x])
         return action
 
     def get_priors(self, game: ConnectGameBitboard):

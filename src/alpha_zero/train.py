@@ -115,7 +115,6 @@ class Train:
         for game_state in self_play_data:
             game_state[2] = -value
             training_data.append(game_state)
-            # TODO: Augment data by flipping the board state horizontally?
 
         # Print statistics of the MCTS
         mcts.print_stats()

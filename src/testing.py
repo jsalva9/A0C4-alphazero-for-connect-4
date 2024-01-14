@@ -1,7 +1,8 @@
-from src.agents.alpha_agent import AlphaAgent
 from src.boards.bitboard import ConnectGameBitboard
 from src.boards.classic_board import ConnectGameClassicBoard
 from src.utils import Agent
+
+from tqdm import tqdm
 
 import numpy as np
 
@@ -44,14 +45,18 @@ class TestEnvironment:
         """
         Run the tests. Run half the games with agent 1 starting, half with agent 2 starting
         """
+        print(f'Running first batch: {self.n_games // 2} games with agent 1 starting')
         wins_1, draws_1, move_acc_1_1, move_acc_2_1 = self.run_batch(self.n_games // 2, agent_1_starts=True)
+        print(f'Running second batch: {self.n_games // 2} games with agent 2 starting')
         wins_2, draws_2, move_acc_1_2, move_acc_2_2 = self.run_batch(self.n_games // 2, agent_1_starts=False)
 
         self.n_wins = wins_1 + (self.n_games // 2 - wins_2 - draws_2)
         self.n_draws = draws_1 + draws_2
 
-        print(f"Agent 1 wins {self.n_wins}/{self.n_games} with an accuracy of {0.5 * move_acc_1_1 + 0.5 * move_acc_1_2}")
-        print(f"Agent 2 wins {self.n_games - self.n_wins - self.n_draws}/{self.n_games} with an accuracy of {0.5 * move_acc_2_1 + 0.5 * move_acc_2_2}")
+        print(f"\n\n -- Results --")
+        win_pct = round(self.n_wins / self.n_games * 100, 2)
+        print(f"Agent 1 wins {self.n_wins}/{self.n_games} ({win_pct}%) with an accuracy of {0.5 * move_acc_1_1 + 0.5 * move_acc_1_2}")
+        print(f"Agent 2 wins {self.n_games - self.n_wins - self.n_draws}/{self.n_games} ({100 - win_pct}%) with an accuracy of {0.5 * move_acc_2_1 + 0.5 * move_acc_2_2}")
         print(f"Draws: {self.n_draws}\n")
 
     def run_batch(self, n_games, agent_1_starts=True):
@@ -72,7 +77,7 @@ class TestEnvironment:
         move_acc_1 = []
         move_acc_2 = []
 
-        for i in range(n_games):
+        for _ in tqdm(range(n_games)):
             game = self.initialize_board()
             is_over = False
             turn = 0
@@ -98,6 +103,7 @@ class TestEnvironment:
 
 if __name__ == "__main__":
     from src.agents.agent import OptimalAgent, RandomAgent
+    from src.agents.alpha_agent import AlphaAgent
 
     from pyinstrument import Profiler
 
@@ -106,7 +112,7 @@ if __name__ == "__main__":
 
     agent_1 = AlphaAgent()
     agent_2 = RandomAgent()
-    testing = TestEnvironment(agent_1, agent_2, n_games=20, bitboard=True, calculate_accuracy=True)
+    testing = TestEnvironment(agent_1, agent_2, n_games=50, bitboard=True, calculate_accuracy=True)
     testing.run()
 
     profiler.stop()
