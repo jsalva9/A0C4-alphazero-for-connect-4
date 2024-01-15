@@ -124,7 +124,7 @@ class Config:
         with open(self._config_path, 'r') as f:
             self._config = yaml.safe_load(f)
 
-        self.model_dir_path = os.path.join(self.__root, self._config['model_directory'])
+        self.model_dir_path = os.path.join(self.__root, 'models')
 
     def __getattr__(self, item):
         # if the item is already an attribute of self, return it

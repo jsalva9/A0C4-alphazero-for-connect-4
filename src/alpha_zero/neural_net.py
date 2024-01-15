@@ -183,7 +183,7 @@ class NNWrapper:
 
                 # Record pi and v loss to a file.
                 if configuration.record_loss:
-                    file_path = f'{configuration.model_dir_path}/{configuration.loss_file}'
+                    file_path = f'{configuration.model_dir_path}/loss.txt'
                     with open(file_path, 'a') as loss_file:
                         loss_file.write('%f|%f\n' % (loss_pi.item(), loss_v.item()))
 

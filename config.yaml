@@ -1,6 +1,6 @@
-num_iterations: 5
-num_games: 10
-num_mcts_sims: 30
+num_iterations: 1
+num_games: 5
+num_mcts_sims: 10
 c_puct: 1
 l2_val: 0.0001
 momentum: 0.9
@@ -13,11 +13,7 @@ epochs: 10
 batch_size: 128
 dirichlet_alpha: 0.5
 epsilon: 0.25
-model_directory: models
 num_eval_games: 10
 eval_win_rate: 0.55
-load_model: 1
-human_play: 0
 resnet_blocks: 5
 record_loss: 1
-loss_file: "loss.txt"

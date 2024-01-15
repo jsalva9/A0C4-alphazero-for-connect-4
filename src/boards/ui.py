@@ -118,6 +118,8 @@ class UI:
             self.screen.blit(text, text_rect)
 
         if priors is not None:
+            if max(priors) > 1 or min(priors) < 0:
+                priors = [(a - min(priors)) / (max(priors) - min(priors)) for a in priors]
             # Print the priors under each column. Color of the played column has a different shade.
             for col in range(self.board.w):
                 text = self.font.render(f"{priors[col]:.2f}", True, self.FONT_COLOR)
@@ -133,6 +135,6 @@ if __name__ == "__main__":
     from src.agents.alpha_agent import AlphaAgent
     # agent = AlphaAgent()
     # agent = OptimalAgent()
-    agent = RandomAgent()
+    agent = OptimalAgent()
     ui = UI(board, agent=agent)
     ui.run()
