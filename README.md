@@ -17,7 +17,7 @@ done by comparing the learned policy with the optimal policy. Finally, a UI will
 engine. Rather than being a gaming interface (there are many ways to play C4 online), the goal is to provide
 insights into AlphaZero's choices through the visualization of prior probabilities.
 
-This is the recording of the final presentation of the project: https://youtu.be/UAg-EkGMHPE
+This is the recording of the final presentation of the project: https://youtu.be/zY61vST8IYU
 
 ### Table of contents
 - [Installation](#installation)
